@@ -233,7 +233,8 @@ export default {
       console.log('form',this.form)
       submitwater(this.form).then(res =>{
         console.log('result',res)
-      }).then(this.getlist())
+        this.getlist()
+      })
       this.openinfo = false;
     },
     viewDetail(row) {

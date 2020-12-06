@@ -220,7 +220,7 @@
         </div>
         <div class="foot">
                 <span slot="footer" class="dialog-footer">
-                  <el-button type="success" size="small" plain @click="pass">审核完毕</el-button>
+                  <el-button type="success" size="small" plain @click="viewDetail">审核完毕</el-button>
                   <!--                  <el-button type="danger" size="small" plain @click="pass">审核未通过</el-button>-->
 <!--                  <el-button type="primary" size="small" plain @click="zhuanyeVisible = false">关闭</el-button>-->
                 </span>
@@ -238,7 +238,8 @@ import {
   updateProjectList,
   deleteProjectList,
   enterpriseInfo,
-  shuikuinspection
+  shuikuinspection,
+  submitshuku
 } from '@/api'
 import pagination from "@/components/Pagination/index"
 import {parseTime} from "@/utils";
@@ -308,10 +309,13 @@ export default {
         updateTime: undefined,
       };
     },
-    viewDetail(row) {
-      console.log('table', row)
-      this.detailFlag = true
-      this.gridData[0] = row
+    viewDetail() {
+      // console.log('table', row)
+      submitshuku(this.form).then(res =>{
+        console.log('result',res)
+        this.getlist()
+      })
+      this.openinfo = false;
     },
     filterNode(value, data) {
       if (!value) return true;
@@ -390,7 +394,7 @@ export default {
       })
     },
     handleUpdate(row) {
-      // this.reset()
+      this.reset()
       this.form = row,
         this.openinfo = true;
 

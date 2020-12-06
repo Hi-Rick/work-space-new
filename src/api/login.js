@@ -21,7 +21,7 @@ export function logout() {
 
 export function getUserInfo(token) {
   return request({
-    url: '/smartwater/people/manage/getUser?userId=' + token,
+    url: '/smartwater/people/manage/getInfo?userId=' + token,
     method: 'get',
     // params: { token }
   })

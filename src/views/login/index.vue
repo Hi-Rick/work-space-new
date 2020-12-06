@@ -348,7 +348,7 @@
     },
     created() {
       // window.addEventListener('hashchange', this.afterQRScan)
-      this.getUrl()
+      // this.getUrl()
     },
     destroyed() {
       // window.removeEventListener('hashchange', this.afterQRScan)
@@ -364,7 +364,8 @@
       getUrl() {
         var afterUrl = window.location.href
         var afterEqual = afterUrl.substring(afterUrl.indexOf('=') + 1)
-        console.log(afterEqual)
+
+        console.log('参数：',afterEqual)
         localStorage.setItem('userId', afterEqual)
       },
       handleLogin() {
@@ -382,6 +383,7 @@
         //     return false
         //   }
         // })
+
         this.$store.dispatch('LoginByUsername', this.loginForm).then(() => {
           this.loading = false
           // this.$router.push({ path: this.redirect || '/' })

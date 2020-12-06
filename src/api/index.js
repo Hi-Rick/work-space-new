@@ -22,7 +22,7 @@ export function submitproject(data) {
 }
 export function submitshuku(data) {
   return request({
-    url: '/smartwater/mobile/project-inspection/hand',
+    url: '/smartwater/mobile/inspection-log/update',
     method: 'put',
     data
   })
