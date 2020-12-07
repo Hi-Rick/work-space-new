@@ -47,7 +47,7 @@ export let getQualityExport = (query)=> get('/smartwater/display/quality/export'
 
 export let enterpriseInfo = (query)=> get('/smartwater/rural_enterpriseInfo/list',query)
 
-export let querycompany = (query)=> get('/smartwater/rural_enterpriseInfo/'+query,query)
+export let querycompany = (query)=> get('/smartwater/rural_enterpriseInfo/findEnterpriseInfoById?id='+query,query)
 //水资源
 export let waterinspection = (query)=> get('/smartwater/mobile/water-resource-inspection/list',query)
 //工程管理科
