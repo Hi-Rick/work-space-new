@@ -41,11 +41,10 @@
         </el-button>
       </el-col>
     </el-row>
-
-    <el-table v-loading="loading" :data="comdata">
+    <el-table v-loading="loading" :data="comdata.slice((currentPage - 1) * pageSize, currentPage * pageSize)">
       <el-table-column label="企业名称" align="center" prop="companyName"/>
       <el-table-column label="地址" align="center" prop="address"/>
-      <el-table-column label="用水户性质" align="center" prop="getWaterType"/>
+      <el-table-column label="用水类型" align="center" prop="getWaterType"/>
       <el-table-column label="法人" align="center" prop="legalRepresentative"/>
       <el-table-column label="联系人" align="center" prop="contactName" :show-overflow-tooltip="true"/>
       <el-table-column label="联系方式" align="center" prop="contactNumber"/>
@@ -66,40 +65,64 @@
         </template>
       </el-table-column>
     </el-table>
-    <pagination v-show="total>0" :total="total" :page.sync="queryParams.pageNum" :limit.sync="queryParams.pageSize" style="text-align: center"/>
+<!--    <pagination v-show="total>0" :total="total" :page.sync="queryParams.pageNum" :limit.sync="queryParams.pageSize" style="text-align: center"/>-->
+    <div style="text-align: center; margin-top: 10px;">
+      <el-pagination
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        :current-page="currentPage"
+        :page-size="pageSize"
+        :page-sizes="[5, 10]"
+        :total="comdata.length"
+        layout="total, sizes, prev, pager, next, jumper"
+      />
+    </div>
     <div>
       <el-dialog :visible.sync="openinfo" :title="title">
-        <el-form ref="form" :model="form" label-width="100px">
+        <el-form ref="form" :model="form" label-width="120px">
           <el-form-item label="企业名称">
-            <el-input v-model="form.projectName"/>
+            <el-input v-model="form.companyName"/>
           </el-form-item>
           <el-form-item label="地址">
-            <el-input v-model="form.designScheme"/>
+            <el-input v-model="form.address"/>
           </el-form-item>
-          <el-form-item label="用水户性质">
-            <el-input v-model="form.projectName"/>
+          <el-form-item label="用水类型">
+            <el-input v-model="form.getWaterType"/>
           </el-form-item>
           <el-form-item label="法人">
-            <el-input v-model="form.designUnitId"/>
+            <el-input v-model="form.legalRepresentative"/>
           </el-form-item>
           <el-form-item label="联系人">
-            <el-input v-model="form.projectName"/>
+            <el-input v-model="form.contactName"/>
           </el-form-item>
           <el-form-item label="联系方式">
-            <el-input v-model="form.tel"/>
+            <el-input v-model="form.contactNumber"/>
           </el-form-item>
           <el-form-item label="取水许可证号">
-            <el-input v-model="form.num"/>
+            <el-input v-model="form.getWaterNumber"/>
           </el-form-item>
-          <el-form-item label="期限">
-            <el-input v-model="form.num"/>
+          <el-form-item label="取水许可证状态"  style="width: 500px">
+            <el-select v-model="form.color" placeholder="请选择" clearable size="small">
+              <el-option
+                v-for="item in optionsta"
+                :key="item.value"
+                style ="margin-bottom: 5px"
+                :label="item.label"
+                :value="item.value">
+              </el-option>
+            </el-select>
+<!--            <el-input v-model=""/>-->
           </el-form-item>
-          <el-form-item label="用水量">
-            <el-input v-model="form.num"/>
+          <el-form-item label="有效期至">
+<!--            <el-input v-model="form.endTime"/>-->
+            <el-date-picker type="date" placeholder="选择日期" v-model="form.endTime" style="width: 100%;"></el-date-picker>
+          </el-form-item>
+          <el-form-item label="年用水量/方">
+            <el-input v-model="form.yearTotal"/>
           </el-form-item>
         </el-form>
         <div slot="footer" class="dialog-footer">
-          <el-button @click="openinfo = false">取 消</el-button>
+          <el-button @click="cancel">取 消</el-button>
           <el-button type="primary" @click="submitForm">确 定</el-button>
         </div>
       </el-dialog>
@@ -114,7 +137,10 @@ import {
   addProjectList,
   updateProjectList,
   deleteProjectList,
-  enterpriseInfo
+  enterpriseInfo,
+  addEnterprise,
+  updateEnterprise,
+  deleteEnterprise
 } from '@/api'
 import pagination from "@/components/Pagination/index"
 import {parseTime} from "@/utils";
@@ -134,8 +160,8 @@ export default {
       multiple: true,
       projectList: [],
       loading: true,
-      pageSize: 10,
-      pageNum: 1,
+      currentPage: 1,
+      pageSize: 5,
       comdata: [],
       queryParams: {
         companyName: undefined,
@@ -157,6 +183,7 @@ export default {
         value: 'red',
         label: '已过期'
       }],
+
       value: '',
     };
   },
@@ -165,6 +192,12 @@ export default {
     this.getlist()
   },
   methods: {
+    handleSizeChange(val) {
+      this.pageSize = val;
+    },
+    handleCurrentChange(val) {
+      this.currentPage = val;
+    },
     getlist() {
       this.loading = true
       enterpriseInfo(this.queryParams).then(response => {
@@ -178,14 +211,17 @@ export default {
     reset() {
       this.form = {
         id: undefined,
-        projectName: undefined,
-        projectOverview: undefined,
-        designScheme: undefined,
-        designUnit: undefined,
-        budget: undefined,
-        status: undefined,
-        createTime: undefined,
-        updateTime: undefined,
+        companyName: undefined,
+        address: undefined,
+        getWaterType: undefined,
+        legalRepresentative: undefined,
+        contactName: undefined,
+        contactNumber: undefined,
+        getWaterNumber: undefined,
+        color: undefined,
+        endTime: undefined,
+        yearTotal: undefined,
+
       };
     },
     viewDetail(row) {
@@ -241,6 +277,10 @@ export default {
         .catch(function () {
         });
     },
+    cancel(){
+      this.openinfo = false;
+      this.getlist()
+    },
     resetQuery() {
       // this.dateRange = [];
       // this.resetForm("queryForm");
@@ -270,7 +310,7 @@ export default {
       // this.reset()
       this.form = row,
         this.openinfo = true;
-      this.title = "修改水资源企业信息";
+      this.title = "修改企业取水许可证信息";
     },
     formatJson(filterVal, jsonData) {
       return jsonData.map(v => filterVal.map(j => {
@@ -282,7 +322,8 @@ export default {
       }))
     },
     handleDelete(row) {
-      const name = row.projectName;
+      console.log('row',row)
+      const name = row.companyName;
       this.$confirm(
         '是否确认删除"' + name + '"的企业信息?',
         "警告",
@@ -293,13 +334,11 @@ export default {
         }
       ).then(function () {
         console.log('id', row.id)
-        return deleteProjectList(row.id);
-      })
-        .then(() => {
-
+        return deleteEnterprise(row.id);
+      }).then(() => {
           this.$message({
             type: "success",
-            text: "删除成功"
+            message: "删除成功"
           })
           this.getlist();
         })
@@ -310,16 +349,17 @@ export default {
       this.$refs["form"].validate((valid) => {
         if (valid) {
           if (this.form.id != undefined) {
-            updateProjectList(this.form).then((response) => {
-              if (response.code === 200) {
+            updateEnterprise(this.form).then((response) => {
+              if (response.data.code === 200) {
                 this.msgSuccess("修改成功");
                 this.openinfo = false;
                 this.getlist();
               }
             });
           } else {
-            addProjectList(this.form).then((response) => {
-              if (response.code === 200) {
+            addEnterprise(this.form).then((response) => {
+              console.log('add',response)
+              if (response.data.code == 200) {
                 this.msgSuccess("新增成功");
                 this.openinfo = false;
                 this.getlist();

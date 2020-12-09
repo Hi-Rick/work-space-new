@@ -4,16 +4,14 @@
       <span style="font-size: 14px;color: #606266;font-weight: 700;margin-right: 10px">企业名称</span>
       <el-input v-model="queryParams.companyName" placeholder="请输入企业名称" clearable size="small"
                 style="width: 150px;margin-right: 30px"/>
-<!--      <span style="font-size: 14px;color: #606266;font-weight: 700;margin-right: 10px">用水类型</span>-->
-<!--      <el-input v-model="queryParams.getWaterType" placeholder="请输入用水类型" clearable size="small"-->
-<!--                style="width: 150px;margin-right: 30px"/>-->
+
       <span style="font-size: 14px;color: #606266;font-weight: 700;margin-right: 10px">事件状态</span>
       <el-select v-model="queryParams.done" placeholder="请选择" clearable size="small"
                  style="width: 150px;margin-right: 30px">
         <el-option
           v-for="item in optionsta"
           :key="item.value"
-          style ="margin-bottom: 5px"
+          style="margin-bottom: 5px"
           :label="item.label"
           :value="item.value">
         </el-option>
@@ -23,9 +21,9 @@
     </div>
 
     <el-row :gutter="10" style="margin-top: 20px">
-<!--      <el-col :span="1.5">-->
-<!--        <el-button type="primary" icon="el-icon-plus" size="mini" @click="addinfo">新增</el-button>-->
-<!--      </el-col>-->
+      <!--      <el-col :span="1.5">-->
+      <!--        <el-button type="primary" icon="el-icon-plus" size="mini" @click="addinfo">新增</el-button>-->
+      <!--      </el-col>-->
       <!--          <el-col :span="1.5">-->
       <!--            <el-button type="success" icon="el-icon-edit" size="mini" :disabled="single">修改</el-button>-->
       <!--          </el-col>-->
@@ -35,72 +33,75 @@
       <!--          <el-col :span="1.5">-->
       <!--            <el-button type="info" icon="el-icon-upload2" size="mini">导入</el-button>-->
       <!--          </el-col>-->
-<!--      <el-col :span="1.5">-->
-<!--        <el-button :loading="downloadLoading" type="warning" icon="el-icon-download" size="mini"-->
-<!--                   @click="handleDownload">导出-->
-<!--        </el-button>-->
-<!--      </el-col>-->
+      <!--      <el-col :span="1.5">-->
+      <!--        <el-button :loading="downloadLoading" type="warning" icon="el-icon-download" size="mini"-->
+      <!--                   @click="handleDownload">导出-->
+      <!--        </el-button>-->
+      <!--      </el-col>-->
     </el-row>
 
-    <el-table v-loading="loading" :data="comdata">
+    <el-table v-loading="loading" :data="comdata.slice((currentPage - 1) * pageSize, currentPage * pageSize)">
       <el-table-column label="企业名称" align="center" prop="companyName"/>
       <el-table-column label="巡查时间" align="center" prop="patrolTime"/>
       <el-table-column label="巡查内容" align="center" prop="content"/>
-<!--      <el-table-column label="单位" align="center" prop="contactName" :show-overflow-tooltip="true"/>-->
-<!--      <el-table-column label="职务" align="center" prop="getWaterNumber"/>-->
-<!--      <el-table-column label="联系方式" align="center" prop="contactNumber"/>-->
       <el-table-column label="巡查结果" align="center" prop="result">
-<!--        <template slot-scope="scope">-->
-<!--          <i v-if="scope.row.color==='green'" class="iconfont ymq-iconwarning" style="color:#67c23a"></i>-->
-<!--          <i v-if="scope.row.color==='yellow'" class="iconfont ymq-iconwarning" style="color:#E6A23C"></i>-->
-<!--          <i v-if="scope.row.color==='red'" class="iconfont ymq-iconwarning" style="color:#F56C6C"></i>-->
-<!--        </template>-->
       </el-table-column>
       <el-table-column label="证据文件" align="center" prop="evidence"/>
       <el-table-column label="后续工作" align="center" prop="subsequentTips"/>
       <el-table-column label="企业对接" align="center">
         <template slot-scope="scope">
-          <el-button type="text"  @click="viewCompany(scope.row)">查看详情</el-button>
+          <el-button type="text" @click="viewCompany(scope.row)">查看详情</el-button>
         </template>
       </el-table-column>
       <el-table-column label="审批状态" align="center">
         <template slot-scope="scope">
-          <el-tag v-if="scope.row.done=='1'"  type="success">已处理</el-tag>
-          <el-tag v-if="scope.row.done=='0'"  type="danger">未处理</el-tag>
-<!--          <i v-if="scope.row.color==='red'" class="iconfont ymq-iconwarning" style="color:#F56C6C"></i>-->
+          <el-tag v-if="scope.row.done=='1'" type="success">已处理</el-tag>
+          <el-tag v-if="scope.row.done=='0'" type="danger">未处理</el-tag>
+          <!--          <i v-if="scope.row.color==='red'" class="iconfont ymq-iconwarning" style="color:#F56C6C"></i>-->
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center"  class-name="small-padding fixed-width">
+      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(scope.row)">审核</el-button>
-<!--          <el-button v-if="scope.row.userId !== 1" size="mini" type="text" icon="el-icon-delete" @click="handleDelete(scope.row)">删除</el-button>-->
+          <!--          <el-button v-if="scope.row.userId !== 1" size="mini" type="text" icon="el-icon-delete" @click="handleDelete(scope.row)">删除</el-button>-->
         </template>
       </el-table-column>
     </el-table>
-    <pagination v-show="total>0" :total="total" :page.sync="queryParams.pageNum" :limit.sync="queryParams.pageSize" style="text-align: center"/>
+    <!--    <pagination v-show="total>0" :total="total" :page.sync="queryParams.pageNum" :limit.sync="queryParams.pageSize" style="text-align: center"/>-->
+    <div style="text-align: center; margin-top: 10px;">
+      <el-pagination
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        :current-page="currentPage"
+        :page-size="pageSize"
+        :page-sizes="[5, 10]"
+        :total="comdata.length"
+        layout="total, sizes, prev, pager, next, jumper"
+      />
+    </div>
     <div>
       <el-dialog :visible.sync="companyVisible" title="企业对接详情">
         <el-row :gutter="20" style="padding-top: 10px">
           <el-col :span="12">
             <span style="font-weight: bolder">企业对接人：</span>
-            <span>{{connect.author}}</span>
+            <span>{{ connect.author }}</span>
           </el-col>
           <el-col :span="12">
             <div class="biaoqian">
               <span style="font-weight: bolder">联系方式：</span>
-              <span>{{connect.phoneNum}}</span>
+              <span>{{ connect.phoneNum }}</span>
             </div>
           </el-col>
         </el-row>
         <el-row :gutter="20" style="padding-top: 10px">
           <el-col :span="12">
             <span style="font-weight: bolder">单位：</span>
-            <span>{{connect.unit}}</span>
+            <span>{{ connect.unit }}</span>
           </el-col>
           <el-col :span="12">
             <div class="biaoqian">
               <span style="font-weight: bolder">职务：</span>
-              <span>{{connect.position}}</span>
+              <span>{{ connect.position }}</span>
             </div>
           </el-col>
         </el-row>
@@ -111,47 +112,47 @@
         <el-row :gutter="20" style="padding-top: 10px">
           <el-col :span="12">
             <span style="font-weight: bolder">企业名称：</span>
-            <span>{{form.companyName}}</span>
+            <span>{{ form.companyName }}</span>
           </el-col>
           <el-col :span="12">
             <div class="biaoqian">
               <span style="font-weight: bolder">巡查时间：</span>
-              <span>{{form.patrolTime}}</span>
+              <span>{{ form.patrolTime }}</span>
             </div>
           </el-col>
         </el-row>
-        <el-divider />
+        <el-divider/>
         <h4>巡查内容</h4>
-        <p>{{form.content}}</p>
+        <p>{{ form.content }}</p>
         <div>
         </div>
-        <el-divider />
+        <el-divider/>
         <h4>巡查结果</h4>
-        <p>{{form.result}}</p>
+        <p>{{ form.result }}</p>
         <div>
 
         </div>
-            <el-divider />
-            <div>
-              <el-row style="padding-top: 10px">
-                <span style="font-weight: bolder">水资源管理中心意见</span>
-              </el-row>
-              <el-row style="padding-top: 10px">
-                <el-input
-                  v-model="form.opinion"
-                  :rows="4"
-                  type="textarea"
-                  placeholder="请输入内容"
-                />
-              </el-row>
-            </div>
-            <div class="foot">
+        <el-divider/>
+        <div>
+          <el-row style="padding-top: 10px">
+            <span style="font-weight: bolder">水资源管理中心意见</span>
+          </el-row>
+          <el-row style="padding-top: 10px">
+            <el-input
+              v-model="form.opinion"
+              :rows="4"
+              type="textarea"
+              placeholder="请输入内容"
+            />
+          </el-row>
+        </div>
+        <div class="foot">
                 <span slot="footer" class="dialog-footer">
                   <el-button type="success" size="small" plain @click="pass">审核完毕</el-button>
-<!--                  <el-button type="danger" size="small" plain @click="pass">审核未通过</el-button>-->
-<!--                  <el-button type="primary" size="small" plain @click="zhuanyeVisible = false">关闭</el-button>-->
+                  <!--                  <el-button type="danger" size="small" plain @click="pass">审核未通过</el-button>-->
+                  <!--                  <el-button type="primary" size="small" plain @click="zhuanyeVisible = false">关闭</el-button>-->
                 </span>
-            </div>
+        </div>
       </el-dialog>
     </div>
   </div>
@@ -178,7 +179,7 @@ export default {
       deptOptions: undefined,
       detailFlag: false,
       downloadLoading: false,
-      companyVisible:false,
+      companyVisible: false,
       openinfo: false,
       title: '',
       filterText: '',
@@ -187,13 +188,13 @@ export default {
       multiple: true,
       projectList: [],
       loading: true,
-      AuditingReason:"",
-      pageSize: 10,
-      pageNum: 1,
+      AuditingReason: "",
+      currentPage: 1,
+      pageSize: 5,
       comdata: [],
       queryParams: {
         companyName: undefined,
-        done:undefined,
+        done: undefined,
       },
       total: 0,
       gridData: [],
@@ -206,7 +207,7 @@ export default {
         label: '未处理'
       }],
       value: '',
-      connect:{},
+      connect: {},
     };
   },
   mounted() {
@@ -214,25 +215,38 @@ export default {
     this.getlist()
   },
   methods: {
+    handleSizeChange(val) {
+      this.pageSize = val;
+    },
+    handleCurrentChange(val) {
+      this.currentPage = val;
+    },
     getlist() {
       this.loading = true
       waterinspection(this.queryParams).then(response => {
         console.log('res', response)
-        this.comdata = response.data.data.list
-        this.total = response.data.data.list.length
-        this.loading = false
+        if(response.data.data.error == '当前暂无数据'){
+          this.comdata = []
+          this.total = 0
+          this.loading = false
+        }else{
+          this.comdata = response.data.data.list
+          this.total = response.data.data.list.length
+          this.loading = false
+        }
+
       })
     },
     reset() {
       this.form = {
-        done:undefined,
-        opinion:undefined,
+        done: undefined,
+        opinion: undefined,
       };
     },
-    pass(){
-      console.log('form',this.form)
-      submitwater(this.form).then(res =>{
-        console.log('result',res)
+    pass() {
+      console.log('form', this.form)
+      submitwater(this.form).then(res => {
+        console.log('result', res)
         this.getlist()
       })
       this.openinfo = false;
@@ -260,10 +274,10 @@ export default {
       this.title = "添加企业取水许可证信息";
       this.openinfo = true
     },
-    viewCompany(row){
-        this.connect = row
-      console.log('对接',this.connect)
-        this.companyVisible =true
+    viewCompany(row) {
+      this.connect = row
+      console.log('对接', this.connect)
+      this.companyVisible = true
     },
 
     getTree() {
@@ -298,8 +312,8 @@ export default {
     resetQuery() {
       // this.dateRange = [];
       // this.resetForm("queryForm");
-      this.queryParams.projectName = ''
-      this.queryParams.status = ''
+      this.queryParams.companyName = ''
+      this.queryParams.done = ''
 
       this.handleQuery();
     },
@@ -347,9 +361,7 @@ export default {
       ).then(function () {
         console.log('id', row.id)
         return deleteProjectList(row.id);
-      })
-        .then(() => {
-
+      }).then(() => {
           this.$message({
             type: "success",
             text: "删除成功"
@@ -387,7 +399,7 @@ export default {
 </script>
 
 <style scoped>
-.foot{
+.foot {
   text-align: center;
   margin-top: 5px;
 }

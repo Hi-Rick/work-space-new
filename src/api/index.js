@@ -6,6 +6,25 @@ export function deleteProjectList(ids) {
     method: 'delete'
   })
 }
+export function deleteEnterprise(ids) {
+  return request({
+    url: '/smartwater/rural_enterpriseInfo/deleteEnterpriseInfoByIds?ids=' +ids,
+    method: 'delete'
+  })
+}
+export function deleteWaterQuality(ids) {
+  return request({
+    url: '/smartwater/display/quality/deleteWaterQuality?waterQualityId=' +ids,
+    method: 'delete'
+  })
+}
+export function updatequality(data) {
+  return request({
+    url: '/smartwater/display/quality',
+    method: 'put',
+    data
+  })
+}
 export function submitwater(data) {
   return request({
     url: '/smartwater/mobile/water-resource-inspection/hand',
@@ -23,6 +42,14 @@ export function submitproject(data) {
 export function submitshuku(data) {
   return request({
     url: '/smartwater/mobile/inspection-log/update',
+    method: 'put',
+    data
+  })
+}
+//修改水资源取水用户
+export function updateEnterprise(data) {
+  return request({
+    url: '/smartwater/rural_enterpriseInfo/updateEnterpriseInfo',
     method: 'put',
     data
   })
@@ -54,3 +81,9 @@ export let waterinspection = (query)=> get('/smartwater/mobile/water-resource-in
 export let projectinspection = (query)=> get('/smartwater/mobile/project-inspection/list',query)
 //水库
 export let shuikuinspection = (query)=> get('/smartwater/mobile/inspection-log/list',query)
+
+export let addEnterprise = (query)=> post('/smartwater/rural_enterpriseInfo/addEnterpriseInfo',query)
+//新增水质信息
+export let addquality = (query)=> post('/smartwater/display/quality',query)
+
+export let getqualitylist = (query)=> get('/smartwater/display/quality/getList',query)

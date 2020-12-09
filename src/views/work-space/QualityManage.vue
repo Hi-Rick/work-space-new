@@ -69,18 +69,15 @@
           </el-col>
         </el-row>
 
-        <el-table v-loading="loading" :data="projectList">
-          <!--          <el-table-column type="selection" width="15" align="center"/>-->
-          <!--          <el-table-column width="15" align="center"/>-->
-          <!--          <el-table-column label="数据编号" align="center" prop="dataCode"/>-->
+        <el-table v-loading="loading" :data="projectList.slice((currentPage - 1) * pageSize, currentPage * pageSize)">
           <el-table-column label="取样地点" align="center" prop="samplingLocation"/>
           <el-table-column label="取样时间" align="center" prop="samplingTime" :show-overflow-tooltip="true"/>
           <el-table-column label="检测单位" align="center" prop="monitoringUnit"/>
           <el-table-column label="质量情况" align="center" prop="quality">
             <template slot-scope="scope">
-              <el-tag v-if="scope.row.status =='施工阶段'" type="danger">差</el-tag>
-              <el-tag v-if="scope.row.status ==''" type="warning">良</el-tag>
-              <el-tag v-if="scope.row" type="success">优</el-tag>
+              <el-tag v-if="scope.row.quality =='差'" type="danger">差</el-tag>
+              <el-tag v-if="scope.row.quality =='良'" type="warning">良</el-tag>
+              <el-tag v-if="scope.row.quality=='优'" type="success">优</el-tag>
             </template>
           </el-table-column>
           <el-table-column label="检测结果" align="center" >
@@ -102,30 +99,38 @@
             </template>
           </el-table-column>
         </el-table>
-        <pagination v-show="total>0" :total="total" :page.sync="queryParams.pageNum" :limit.sync="queryParams.pageSize" style="text-align: center"/>
-
+<!--        <pagination v-show="total>0" :total="total" :page.sync="queryParams.pageNum" :limit.sync="queryParams.pageSize" style="text-align: center"/>-->
+    <div style="text-align: center; margin-top: 10px;">
+      <el-pagination
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        :current-page="currentPage"
+        :page-size="pageSize"
+        :page-sizes="[5, 10]"
+        :total="projectList.length"
+        layout="total, sizes, prev, pager, next, jumper"
+      />
+    </div>
 <!--      </el-col>-->
 <!--    </el-row>-->
     <div>
       <el-dialog :visible.sync="openinfo" :title="title">
         <el-form ref="form" :model="form" label-width="100px">
           <el-form-item label="取样地点">
-            <el-input v-model="form.projectName"/>
+            <el-input v-model="form.samplingLocation"/>
           </el-form-item>
           <el-form-item label="取样时间">
             <el-col :span="11">
-              <el-date-picker v-model="form.updateTime" value-format=" yyyy-MM-dd " format="yyyy-MM-dd " type="date"
+              <el-date-picker v-model="form.samplingTime" value-format=" yyyy-MM-dd " format="yyyy-MM-dd " type="date"
                               placeholder="选择日期" style="width: 60%;"/>
             </el-col>
           </el-form-item>
           <el-form-item label="检测单位">
-            <el-input v-model="form.designScheme"/>
+            <el-input v-model="form.monitoringUnit"/>
           </el-form-item>
-          <el-form-item label="质量情况">
-            <el-input v-model="form.designUnitId"/>
-          </el-form-item>
-
-
+<!--          <el-form-item label="质量情况">-->
+<!--            <el-input v-model="form.designUnitId"/>-->
+<!--          </el-form-item>-->
 <!--          <el-form-item label="工程状态">-->
 <!--            <el-select v-model="form.status" placeholder="请选择" style="margin-right: 40px">-->
 <!--              <el-option-->
@@ -151,63 +156,65 @@
         <el-row>
           <el-col :span="3">
             <span style="font-size: 14px;color: #606266;font-weight: 700;">水温:</span>
-            <el-input v-model="form.designUnitId" size="small"  />
+            <el-input v-model="form.waterTemperature" size="small"  />
           </el-col>
           <el-col :span="3">
             <span style="font-size: 14px;color: #606266;font-weight: 700;">ph值:</span>
-            <el-input v-model="form.designUnitId" size="small"  />
+            <el-input v-model="form.phValue" size="small"  />
           </el-col>
           <el-col :span="3">
             <span style="font-size: 14px;color: #606266;font-weight: 700;">电导率:</span>
-            <el-input v-model="form.designUnitId" size="small"  />
+            <el-input v-model="form.conductivity" size="small"  />
           </el-col>
           <el-col :span="3">
             <span style="font-size: 14px;color: #606266;font-weight: 700;">浊度:</span>
-            <el-input v-model="form.designUnitId" size="small"  />
+            <el-input v-model="form.turbidity" size="small"  />
           </el-col>
           <el-col :span="3">
             <span style="font-size: 14px;color: #606266;font-weight: 700;">溶解氧:</span>
-            <el-input v-model="form.designUnitId" size="small"  />
+            <el-input v-model="form.dissolvedOxygen" size="small"  />
           </el-col> <el-col :span="3">
           <span style="font-size: 14px;color: #606266;font-weight: 700;">总氮:</span>
-          <el-input v-model="form.designUnitId" size="small"  />
+          <el-input v-model="form.totalNitrogen" size="small"  />
         </el-col> <el-col :span="3">
           <span style="font-size: 14px;color: #606266;font-weight: 700;">氨氮:</span>
-          <el-input v-model="form.designUnitId" size="small"  />
+          <el-input v-model="form.ammoniaNitrogen" size="small"  />
         </el-col> <el-col :span="3">
           <span style="font-size: 14px;color: #606266;font-weight: 700;">化学需氧量:</span>
-          <el-input v-model="form.designUnitId" size="small"  />
+          <el-input v-model="form.chemicalOxygenDemand" size="small"  />
         </el-col>
         </el-row>
         <el-row>
           <el-col :span="3">
             <span style="font-size: 14px;color: #606266;font-weight: 700;">氟化物:</span>
-            <el-input v-model="form.designUnitId" size="small"  />
+            <el-input v-model="form.fluoride" size="small"  />
           </el-col>
           <el-col :span="3">
             <span style="font-size: 14px;color: #606266;font-weight: 700;">叶绿素:</span>
-            <el-input v-model="form.designUnitId" size="small"  />
+            <el-input v-model="form.chlorophyll" size="small"  />
           </el-col>
           <el-col :span="3">
             <span style="font-size: 14px;color: #606266;font-weight: 700;">挥发酚:</span>
-            <el-input v-model="form.designUnitId" size="small"  />
+            <el-input v-model="form.volatilePhenol" size="small"  />
           </el-col>
           <el-col :span="3">
             <span style="font-size: 14px;color: #606266;font-weight: 700;">总有机碳:</span>
-            <el-input v-model="form.designUnitId" size="small"  />
+            <el-input v-model="form.totalOrganicCarbon" size="small"  />
           </el-col>
           <el-col :span="3">
             <span style="font-size: 14px;color: #606266;font-weight: 700;">总磷:</span>
-            <el-input v-model="form.designUnitId" size="small"  />
+            <el-input v-model="form.totalPhosphorus" size="small"  />
           </el-col> <el-col :span="3">
           <span style="font-size: 14px;color: #606266;font-weight: 700;">硝酸盐氮:</span>
-          <el-input v-model="form.designUnitId" size="small"  />
-        </el-col> <el-col :span="3">
-          <span style="font-size: 14px;color: #606266;font-weight: 700;">氨氮:</span>
-          <el-input v-model="form.designUnitId" size="small"  />
-        </el-col> <el-col :span="3">
+          <el-input v-model="form.nitrateNitrogen" size="small"  />
+        </el-col>
+<!--          <el-col :span="3">-->
+<!--          <span style="font-size: 14px;color: #606266;font-weight: 700;">氨氮:</span>-->
+<!--          <el-input v-model="form.ammoniaNitrogen" size="small"  />-->
+<!--        </el-col> -->
+          <el-col :span="3">
           <span style="font-size: 14px;color: #606266;font-weight: 700;">高锰酸盐指数:</span>
-          <el-input v-model="form.designUnitId" size="small"  />
+          <el-input v-model="form.permanganateIndex" size="small"  />
         </el-col>
         </el-row>
         <div slot="footer" class="dialog-footer">
@@ -251,15 +258,13 @@
 
 <script>
 import {
-  getAllAsset,
-  getTreeList,
   getDesignList,
-  getProjectList,
   getQualityExport,
-  addProjectList,
-  updateProjectList,
-  deleteProjectList,
-  getWaterList
+  getWaterList,
+  addquality,
+  updatequality,
+  deleteWaterQuality,
+  getqualitylist
 } from '@/api/index'
 import pagination from "@/components/Pagination/index"
 import {parseTime} from "@/utils";
@@ -277,7 +282,7 @@ export default {
       },
       downloadLoading: false,
       openinfo: false,
-      title: '',
+
       filterText: '',
       title: '',
       form: {},
@@ -285,17 +290,12 @@ export default {
       multiple: true,
       projectList: [],
       loading: true,
-      pageSize: 10,
-      pageNum: 1,
+      currentPage: 1,
+      pageSize: 5,
       queryParams: {
-        reservoirCodeName:undefined,
         pumpNameCode:undefined,
-    waterPlantCodeName:undefined,
-        samplingLocation: undefined,
-        samplingTime: undefined,
-        monitoringUnit: undefined,
-        quality: undefined,
-        fileUrl: undefined
+        waterPlantCodeName:undefined,
+        reservoirCodeName:undefined,
       },
       total: 0,
       gridData: [],
@@ -370,17 +370,47 @@ export default {
   // },
 
   methods: {
+    handleSizeChange(val) {
+      this.pageSize = val;
+    },
+    handleCurrentChange(val) {
+      this.currentPage = val;
+    },
     reset() {
       this.form = {
-        id:undefined,
-        projectName: undefined,
-        projectOverview: undefined,
-        designScheme: undefined,
-        designUnit: undefined,
-        budget: undefined,
-        status: undefined,
-        createTime: undefined,
-        updateTime: undefined,
+        waterQualityId: undefined,
+        waterTemperature: undefined,
+        phValue: undefined,
+        conductivity: undefined,
+        turbidity: undefined,
+        samplingLocation: undefined,
+        samplingTime: undefined,
+        monitoringUnit: undefined,
+        fileUrl: undefined,
+        dissolvedOxygen: undefined,
+        permanganateIndex: undefined,
+        quality: undefined,
+        chemicalOxygenDemand: undefined,
+        totalNitrogen: undefined,
+        ammoniaNitrogen: undefined,
+        nitriteNitrogen: undefined,
+        nitrateNitrogen: undefined,
+        totalPhosphorus: undefined,
+        totalOrganicCarbon: undefined,
+        volatilePhenol: undefined,
+        chlorophyll: undefined,
+        fluoride: undefined,
+        arsenic: undefined,
+        mercury: undefined,
+        hexavalentChromium: undefined,
+        copper: undefined,
+        lead: undefined,
+        cadmium: undefined,
+        zinc: undefined,
+        antimony: undefined,
+        pumpNameCode: undefined,
+        waterPlantCodeName: undefined,
+        reservoirCodeName: undefined,
       };
     },
     viewDetail(row){
@@ -415,8 +445,13 @@ export default {
     },
     handleQuery() {
       // console.log('status', this.queryParams.status)
-      this.queryParams.page = 1;
-      this.getlist();
+      // this.queryParams.page = 1;
+      getqualitylist(this.queryParams).then(res => {
+        console.log('',res)
+        this.projectList = res.data.rows
+        this.total = res.data.total
+        this.loading = false
+      })
     },
     getlist() {
       this.loading = true
@@ -449,10 +484,11 @@ export default {
     resetQuery() {
       // this.dateRange = [];
       // this.resetForm("queryForm");
-      this.queryParams.projectName = ''
-      this.queryParams.status = ''
+      this.queryParams.pumpNameCode = undefined
+      this.queryParams.waterPlantCodeName = undefined
+      this.queryParams.reservoirCodeName = undefined
 
-      this.handleQuery();
+      this.getlist()
     },
     handleDownload() {
       this.downloadLoading = true
@@ -472,8 +508,9 @@ export default {
       })
     },
     handleUpdate(row) {
-      // this.reset()
+      this.reset()
       this.form = row,
+        console.log('form',this.form)
         this.openinfo = true;
       this.title = "修改水质信息";
     },
@@ -487,7 +524,8 @@ export default {
       }))
     },
     handleDelete(row) {
-      const name = row.projectName;
+
+      const name = row.samplingLocation;
       this.$confirm(
         '是否确认删除"' + name + '"的水质信息?',
         "警告",
@@ -497,14 +535,14 @@ export default {
           type: "warning",
         }
       ).then(function () {
-        console.log('id',row.id)
-        return deleteProjectList(row.id);
+        console.log('id',row.waterQualityId)
+        return  deleteWaterQuality(row.waterQualityId);
       })
         .then(() => {
 
           this.$message({
             type: "success",
-            text: "删除成功"
+            message: "删除成功"
           })
           this.getlist();
         })
@@ -513,17 +551,17 @@ export default {
     submitForm: function () {
       this.$refs["form"].validate((valid) => {
         if (valid) {
-          if (this.form.id != undefined) {
-            updateProjectList(this.form).then((response) => {
-              if (response.code === 200) {
+          if (this.form.waterQualityId != undefined) {
+            updatequality(this.form).then((response) => {
+              if (response.data.code === 200) {
                 this.msgSuccess("修改成功");
                 this.openinfo = false;
                 this.getlist();
               }
             });
           } else {
-            addProjectList(this.form).then((response) => {
-              if (response.code === 200) {
+            addquality(this.form).then((response) => {
+              if (response.data.code === 200) {
                 this.msgSuccess("新增成功");
                 this.openinfo = false;
                 this.getlist();

@@ -386,7 +386,7 @@ export default {
     },
     handleQuery() {
       // console.log('status', this.queryParams.status)
-      this.queryParams.page = 1;
+      // this.queryParams.page = 1;
       this.getlist();
     },
 
@@ -411,7 +411,7 @@ export default {
       // this.dateRange = [];
       // this.resetForm("queryForm");
       this.queryParams.projectName = ''
-      this.queryParams.status = ''
+      this.queryParams.done = ''
 
       this.handleQuery();
     },

@@ -61,11 +61,11 @@ const user = {
 
     // 获取用户信息
     GetUserInfo({ commit, state }) {
-      var afterUrl = window.location.search.substring(1)
-      var afterEqual = afterUrl.substring(afterUrl.indexOf('=') + 1)
-
-      console.log('参数：',afterEqual)
-      localStorage.setItem('userId', afterEqual)
+      // var afterUrl = window.location.search.substring(1)
+      // var afterEqual = afterUrl.substring(afterUrl.indexOf('=') + 1)
+      //
+      // console.log('参数：',afterEqual)
+      // localStorage.setItem('userId', afterEqual)
       return new Promise((resolve, reject) => {
         getUserInfo(localStorage.getItem('userId')).then(response => {
           // 由于mockjs 不支持自定义状态码只能这样hack
