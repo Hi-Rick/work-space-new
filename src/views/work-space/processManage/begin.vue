@@ -601,7 +601,7 @@ export default {
         designUnit: undefined,
         designUnitId: undefined,
         projectName: undefined,
-        status: undefined
+        status: '验收阶段'
       },
       total: 0,
       options: [{

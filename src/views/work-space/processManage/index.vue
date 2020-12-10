@@ -30,14 +30,13 @@
           <span style="font-size: 14px;color: #606266;font-weight: 700;margin-right: 10px">工程名称</span>
           <el-input v-model="queryParams.projectName" placeholder="请输入工程名称" clearable size="small"
                     style="width: 200px;margin-right: 30px"/>
-          <span style="font-size: 14px;color: #606266;font-weight: 700;margin-right: 10px">工程状态</span>
-          <el-select v-model="queryParams.status" placeholder="请选择" clearable size="small" style="margin-right: 40px">
+          <span style="font-size: 14px;color: #606266;font-weight: 700;margin-right: 10px">设计单位</span>
+          <el-select v-model="queryParams.designUnitId" placeholder="请选择" clearable size="small" style="margin-right: 40px">
             <el-option
-              v-for="item in options"
-              :key="item.value"
-              style ="margin-bottom: 5px"
-              :label="item.label"
-              :value="item.value">
+              v-for="item in deptOptions"
+              :key="item.designUnitId"
+              :label="item.designUnit"
+              :value="item.designUnitId">
             </el-option>
           </el-select>
           <el-button type="cyan" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
@@ -65,9 +64,6 @@
         </el-row>
 
         <el-table v-loading="loading" :data="projectList">
-          <!--          <el-table-column type="selection" width="15" align="center"/>-->
-          <!--          <el-table-column width="15" align="center"/>-->
-          <!--          <el-table-column label="数据编号" align="center" prop="dataCode"/>-->
           <el-table-column label="工程名称" align="center" prop="businessProject.projectName"/>
           <el-table-column label="工程概况" align="center" prop="businessProject.projectOverview" :show-overflow-tooltip="true"/>
           <el-table-column label="设计方案" align="center" prop="businessProject.designScheme"/>
@@ -79,7 +75,7 @@
                     <el-button type="text" @click="viewProposal(scope.row.businessProposal)">查看详情</el-button>
              </template>
           </el-table-column>
-          <el-table-column label="概要设计" align="center" />
+          <el-table-column label="概要设计" align="center" prop="businessProposal.projectProposal"   />
           <el-table-column label="设计评审会" align="center" >
             <template slot-scope="scope">
               <el-button type="text" @click="viewMeet(scope.row.meetingReview)">查看详情</el-button>
@@ -87,21 +83,16 @@
           </el-table-column>
           <el-table-column label="图纸" align="center" prop="businessProposal.drawing" />
           <el-table-column label="招标方案" align="center" prop="businessProposal.projectProposal" />
-<!--          <el-table-column label="工程状态" align="center" prop="status">-->
-<!--            <template slot-scope="scope">-->
-<!--              <el-tag v-if="scope.row.status =='立项阶段'">立项阶段</el-tag>-->
-<!--              <el-tag v-if="scope.row.status =='招标阶段'" type="warning">招标阶段</el-tag>-->
-<!--              <el-tag v-if="scope.row.status =='施工阶段'" type="success">施工阶段</el-tag>-->
-<!--            </template>-->
-<!--          </el-table-column>-->
-<!--          <el-table-column label="创建时间" align="center" prop="businessProject.createTime" :show-overflow-tooltip="true">-->
-<!--          </el-table-column>-->
-<!--          <el-table-column label="更新时间" align="center" prop="businessProject.updateTime" :show-overflow-tooltip="true">-->
-<!--            &lt;!&ndash;                        <template slot-scope="scope">&ndash;&gt;-->
-<!--            &lt;!&ndash;                          <span>{{ updateTime) }}</span>&ndash;&gt;-->
-<!--            &lt;!&ndash;                        </template>&ndash;&gt;-->
-<!--          </el-table-column>-->
-
+          <el-table-column label="项目进度" align="center"  >
+            <template slot-scope="scope">
+              <el-tag v-if="scope.row.businessProject.status=='立项阶段'" >立项阶段</el-tag>
+              <el-tag v-if="scope.row.businessProject.status=='招标阶段'" type="warning">招标阶段</el-tag>
+              <el-tag v-if="scope.row.businessProject.status=='施工阶段'" type="danger">施工阶段</el-tag>
+              <el-tag v-if="scope.row.businessProject.status=='验收阶段'" type="success">验收阶段</el-tag>
+<!--              <el-tag v-if="scope.row.done=='0'" type="danger">未处理</el-tag>-->
+              <!--          <i v-if="scope.row.color==='red'" class="iconfont ymq-iconwarning" style="color:#F56C6C"></i>-->
+            </template>
+          </el-table-column>
           <el-table-column label="操作" align="center" width="150" class-name="small-padding fixed-width">
             <template slot-scope="scope">
               <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(scope.row)">修改</el-button>
@@ -115,7 +106,8 @@
           </el-table-column>
           <el-table-column label="点击完成立项" align="center"  class-name="small-padding fixed-width">
             <template slot-scope="scope">
-              <el-button size="mini" type="danger"  @click="lixiang(scope.row.businessProject)">立项</el-button>
+              <el-button  v-if="scope.row.businessProject.status =='立项阶段'" size="mini" type="danger"  @click="lixiang(scope.row.businessProject)" >立项</el-button>
+              <el-button  v-if="scope.row.businessProject.status !=='立项阶段'" size="mini" type="success"  @click="lixiang(scope.row.businessProject)" disabled>已立项</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -127,48 +119,47 @@
       <el-dialog :visible.sync="openinfo" :title="title">
         <el-tabs v-model="activeName">
           <el-tab-pane label="工程信息" name="first">
-            <el-form ref="form" :model="form" label-width="100px">
+            <el-form ref="form" :model="businessProject" label-width="100px">
             <el-form-item label="工程名称">
-              <el-input v-model="form.projectName"/>
+              <el-input v-model="businessProject.projectName"/>
             </el-form-item>
             <el-form-item label="工程概况">
-              <el-input v-model="form.projectOverview"/>
+              <el-input v-model="businessProject.projectOverview"/>
             </el-form-item>
             <el-form-item label="设计方案">
-              <el-input v-model="form.designScheme"/>
+              <el-input v-model="businessProject.designScheme"/>
             </el-form-item>
             <el-form-item label="设计单位">
-              <el-select v-model="form.designUnitId" placeholder="请选择" style="margin-right: 40px">
+              <el-select v-model="businessProject.designUnitId" placeholder="请选择" style="margin-right: 40px">
                 <el-option
-                  v-for="item in options1"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="item.value">
+                  v-for="item in deptOptions"
+                  :key="item.designUnitId"
+                  :label="item.designUnit"
+                  :value="item.designUnitId">
                 </el-option>
               </el-select>
-              <!--            <el-input v-model="form.designUnitId"/>-->
             </el-form-item>
             <el-form-item label="预算资金">
-              <el-input v-model="form.budget"/>
+              <el-input v-model="businessProject.budget"/>
             </el-form-item>
               <el-form-item label="概要设计">
                 <el-upload
-                  class="upload-demo"
-                  action="https://jsonplaceholder.typicode.com/posts/"
-                  :on-preview="handlePreview"
-                  :on-remove="handleRemove"
-                  :before-remove="beforeRemove"
-                  multiple
-                  :limit="3"
-                  :on-exceed="handleExceed"
-                  :file-list="fileList">
+                class="upload-demo"
+                action="http://47.104.100.75/smartwater/engineering/proposal/addFile"
+                :on-preview="handlePreview"
+                :on-remove="handleRemove"
+                :before-remove="beforeRemove"
+                multiple
+                :limit="3"
+                :on-exceed="handleExceed"
+                :file-list="fileList">
                   <el-button size="small" type="primary">点击上传</el-button>
                 </el-upload>
               </el-form-item>
               <el-form-item label="图纸">
                 <el-upload
                   class="upload-demo"
-                  action="https://jsonplaceholder.typicode.com/posts/"
+                  action="http://47.104.100.75/smartwater/engineering/proposal/addFile"
                   :on-preview="handlePreview"
                   :on-remove="handleRemove"
                   :before-remove="beforeRemove"
@@ -182,7 +173,7 @@
               <el-form-item label="招标方案">
                 <el-upload
                   class="upload-demo"
-                  action="https://jsonplaceholder.typicode.com/posts/"
+                  action="http://47.104.100.75/smartwater/engineering/proposal/addFile"
                   :on-preview="handlePreview"
                   :on-remove="handleRemove"
                   :before-remove="beforeRemove"
@@ -193,59 +184,39 @@
                   <el-button size="small" type="primary">点击上传</el-button>
                 </el-upload>
               </el-form-item>
-            <!--          <el-form-item label="工程状态">-->
-            <!--            <el-select v-model="form.status" placeholder="请选择" style="margin-right: 40px">-->
-            <!--              <el-option-->
-            <!--                v-for="item in options"-->
-            <!--                :key="item.value"-->
-            <!--                :label="item.label"-->
-            <!--                :value="item.value">-->
-            <!--              </el-option>-->
-            <!--            </el-select>-->
-            <!--          </el-form-item>-->
             <el-form-item label="创建时间">
               <el-col :span="11">
-                <el-date-picker v-model="form.createTime" value-format=" yyyy-MM-dd " format="yyyy-MM-dd " type="date"
-                                placeholder="选择日期" style="width: 60%;"/>
+                <el-date-picker type="date" placeholder="选择日期" v-model="businessProject.createTime" style="width: 100%;"></el-date-picker>
+<!--                <el-date-picker v-model="businessProject.createTime" value-format=" yyyy-MM-dd " format="yyyy-MM-dd " type="date"-->
+<!--                                placeholder="选择日期" style="width: 60%;"/>-->
               </el-col>
             </el-form-item>
             <el-form-item label="更新时间">
               <el-col :span="11">
-                <el-date-picker v-model="form.updateTime" value-format=" yyyy-MM-dd " format="yyyy-MM-dd " type="date"
-                                placeholder="选择日期" style="width: 60%;"/>
+<!--                <el-date-picker v-model="businessProject.updateTime" value-format=" yyyy-MM-dd " format="yyyy-MM-dd " type="date"-->
+<!--                                placeholder="选择日期" style="width: 60%;"/>-->
+                <el-date-picker type="date" placeholder="选择日期" v-model="businessProject.updateTime" style="width: 100%;"></el-date-picker>
               </el-col>
             </el-form-item>
 
           </el-form></el-tab-pane>
           <el-tab-pane label="立项批复情况" name="second">
-            <el-form ref="form" :model="form" label-width="100px">
+            <el-form ref="form" :model="businessProposal" label-width="100px">
             <el-form-item label="立项批复时间">
               <el-col :span="11">
-                <el-date-picker v-model="form.createTime" value-format=" yyyy-MM-dd " format="yyyy-MM-dd " type="date"
-                                placeholder="选择日期" style="width: 60%;"/>
+                <el-date-picker type="date" placeholder="选择日期" v-model="businessProposal.createTime" style="width: 100%;"></el-date-picker>
               </el-col>
             </el-form-item>
             <el-form-item label="立项批复结果">
-              <el-input v-model="form.projectOverview"/>
+              <el-input v-model="businessProposal.result"/>
             </el-form-item>
             <el-form-item label="批复意见">
-              <el-input v-model="form.designScheme"/>
+              <el-input v-model="businessProposal.content"/>
             </el-form-item>
-<!--            <el-form-item label="设计单位">-->
-<!--              <el-select v-model="form.designUnitId" placeholder="请选择" style="margin-right: 40px">-->
-<!--                <el-option-->
-<!--                  v-for="item in options1"-->
-<!--                  :key="item.value"-->
-<!--                  :label="item.label"-->
-<!--                  :value="item.value">-->
-<!--                </el-option>-->
-<!--              </el-select>-->
-<!--              &lt;!&ndash;            <el-input v-model="form.designUnitId"/>&ndash;&gt;-->
-<!--            </el-form-item>-->
             <el-form-item label="批复报告">
               <el-upload
                 class="upload-demo"
-                action="https://jsonplaceholder.typicode.com/posts/"
+                action="http://47.104.100.75/smartwater/engineering/proposal/addFile"
                 :on-preview="handlePreview"
                 :on-remove="handleRemove"
                 :before-remove="beforeRemove"
@@ -256,79 +227,33 @@
                 <el-button size="small" type="primary">点击上传</el-button>
               </el-upload>
             </el-form-item>
-            <!--          <el-form-item label="工程状态">-->
-            <!--            <el-select v-model="form.status" placeholder="请选择" style="margin-right: 40px">-->
-            <!--              <el-option-->
-            <!--                v-for="item in options"-->
-            <!--                :key="item.value"-->
-            <!--                :label="item.label"-->
-            <!--                :value="item.value">-->
-            <!--              </el-option>-->
-            <!--            </el-select>-->
-            <!--          </el-form-item>-->
-<!--            <el-form-item label="创建时间">-->
-<!--              <el-col :span="11">-->
-<!--                <el-date-picker v-model="form.createTime" value-format=" yyyy-MM-dd " format="yyyy-MM-dd " type="date"-->
-<!--                                placeholder="选择日期" style="width: 60%;"/>-->
-<!--              </el-col>-->
-<!--            </el-form-item>-->
-<!--            <el-form-item label="更新时间">-->
-<!--              <el-col :span="11">-->
-<!--                <el-date-picker v-model="form.updateTime" value-format=" yyyy-MM-dd " format="yyyy-MM-dd " type="date"-->
-<!--                                placeholder="选择日期" style="width: 60%;"/>-->
-<!--              </el-col>-->
-<!--            </el-form-item>-->
-
           </el-form></el-tab-pane>
           <el-tab-pane label="设计评审会" name="third">
-            <el-form ref="form" :model="form" label-width="100px">
+            <el-form ref="form" :model="meetingReview" label-width="100px">
             <el-form-item label="参会专家">
-              <el-input v-model="form.projectName"/>
+              <el-input v-model="meetingReview.participatingExperts"/>
             </el-form-item>
             <el-form-item label="组织单位">
-              <el-input v-model="form.projectOverview"/>
+              <el-input v-model="meetingReview.organizationalUnitId"/>
             </el-form-item>
             <el-form-item label="会议时间">
-              <el-input v-model="form.designScheme"/>
+<!--              <el-input v-model="meetingReview.createTime"/>-->
+              <el-date-picker type="date" placeholder="选择日期" v-model="meetingReview.createTime" style="width: 100%;"></el-date-picker>
             </el-form-item>
 
             <el-form-item label="专家意见">
-              <el-input v-model="form.budget"/>
+              <el-input v-model="meetingReview.expertOpinion"/>
             </el-form-item>
               <el-form-item label="是否修改">
-                <el-select v-model="form.designUnitId" placeholder="请选择" style="margin-right: 40px">
+                <el-select v-model="meetingReview.modify" placeholder="请选择" style="margin-right: 40px">
                   <el-option
-                    v-for="item in options1"
+                    v-for="item in options11"
                     :key="item.value"
                     :label="item.label"
                     :value="item.value">
                   </el-option>
                 </el-select>
-                <!--            <el-input v-model="form.designUnitId"/>-->
               </el-form-item>
-            <!--          <el-form-item label="工程状态">-->
-            <!--            <el-select v-model="form.status" placeholder="请选择" style="margin-right: 40px">-->
-            <!--              <el-option-->
-            <!--                v-for="item in options"-->
-            <!--                :key="item.value"-->
-            <!--                :label="item.label"-->
-            <!--                :value="item.value">-->
-            <!--              </el-option>-->
-            <!--            </el-select>-->
-            <!--          </el-form-item>-->
-<!--            <el-form-item label="创建时间">-->
-<!--              <el-col :span="11">-->
-<!--                <el-date-picker v-model="form.createTime" value-format=" yyyy-MM-dd " format="yyyy-MM-dd " type="date"-->
-<!--                                placeholder="选择日期" style="width: 60%;"/>-->
-<!--              </el-col>-->
-<!--            </el-form-item>-->
-<!--            <el-form-item label="更新时间">-->
-<!--              <el-col :span="11">-->
-<!--                <el-date-picker v-model="form.updateTime" value-format=" yyyy-MM-dd " format="yyyy-MM-dd " type="date"-->
-<!--                                placeholder="选择日期" style="width: 60%;"/>-->
-<!--              </el-col>-->
-<!--            </el-form-item>-->
-
           </el-form></el-tab-pane>
 
         </el-tabs>
@@ -352,98 +277,17 @@
           <span>{{proval.result}}</span>
         </div>
       </el-col>
-<!--      <el-col :span="8">-->
-<!--        <div class="biaoqian">-->
-<!--          <span style="font-weight: bolder">担任职务：</span>-->
-<!--          <span>讲师</span>-->
-<!--        </div>-->
-<!--      </el-col>-->
     </el-row>
-<!--    <el-row :gutter="20" style="padding-top: 10px">-->
-<!--      <el-col :span="8">-->
-<!--        <div class="biaoqian">-->
-<!--          <span style="font-weight: bolder">开始时间：</span>-->
-<!--          <span>2000</span>-->
-<!--        </div>-->
-<!--      </el-col>-->
-<!--      <el-col :span="8">-->
-<!--        <div class="biaoqian">-->
-<!--          <span style="font-weight: bolder">结束时间：</span>-->
-<!--          <span>xxxxxx</span>-->
-<!--        </div>-->
-<!--      </el-col>-->
-<!--      <el-col :span="8">-->
-<!--        <div class="biaoqian">-->
-<!--          <span style="font-weight: bolder">证明人：</span>-->
-<!--          <span>王老师</span>-->
-<!--        </div>-->
-<!--      </el-col>-->
-<!--    </el-row>-->
     <el-divider />
     <h4>批复意见</h4>
     <p>{{proval.content}}</p>
     <div>
-<!--      <el-row>-->
-<!--        <el-col :span="6">-->
-<!--          信息属实-->
-<!--        </el-col>-->
-<!--        <el-col :span="6">-->
-<!--          <span>审核时间：</span>-->
-<!--          <span>2019-12-04</span>-->
-<!--        </el-col>-->
-<!--        <el-col :span="6">-->
-<!--          <span>审核人：</span>-->
-<!--          <span>刘明至</span>-->
-<!--        </el-col>-->
-<!--        <el-col :span="5">-->
-<!--          <span>审核状态</span>-->
-<!--          <el-tag type="success" size="small">通过</el-tag>-->
-<!--        </el-col>-->
-<!--      </el-row>-->
     </div>
     <el-divider />
     <h4>批复报告</h4>
     <p>{{proval.replyReport}}</p>
     <div>
-<!--      <el-row>-->
-<!--        <el-col :span="6">-->
-<!--          批准通过-->
-<!--        </el-col>-->
-<!--        <el-col :span="6">-->
-<!--          <span>审核时间：</span>-->
-<!--          <span>2019-12-04</span>-->
-<!--        </el-col>-->
-<!--        <el-col :span="6">-->
-<!--          <span>审核人：</span>-->
-<!--          <span>郭志</span>-->
-<!--        </el-col>-->
-<!--        <el-col :span="5">-->
-<!--          <span>审核状态</span>-->
-<!--          <el-tag type="success" size="small">通过</el-tag>-->
-<!--        </el-col>-->
-<!--      </el-row>-->
     </div>
-<!--    <el-divider />-->
-<!--    <div>-->
-<!--      <el-row style="padding-top: 10px">-->
-<!--        <span style="font-weight: bolder">科研处意见</span>-->
-<!--      </el-row>-->
-<!--      <el-row style="padding-top: 10px">-->
-<!--        <el-input-->
-<!--          v-model="AuditingReason"-->
-<!--          :rows="4"-->
-<!--          type="textarea"-->
-<!--          placeholder="请输入内容"-->
-<!--        />-->
-<!--      </el-row>-->
-<!--    </div>-->
-<!--    <div class="foot">-->
-<!--        <span slot="footer" class="dialog-footer">-->
-<!--          <el-button type="success" size="small" plain @click="pass">审核通过</el-button>-->
-<!--          <el-button type="danger" size="small" plain @click="pass">审核未通过</el-button>-->
-<!--          <el-button type="primary" size="small" plain @click="zhuanyeVisible = false">关闭</el-button>-->
-<!--        </span>-->
-<!--    </div>-->
   </el-dialog>
 </div>
     <div>
@@ -479,77 +323,7 @@
               <span>{{meet.modify}}</span>
             </div>
           </el-col>
-<!--          <el-col :span="8">-->
-<!--            <div class="biaoqian">-->
-<!--              <span style="font-weight: bolder">证明人：</span>-->
-<!--              <span>王老师</span>-->
-<!--            </div>-->
-<!--          </el-col>-->
         </el-row>
-<!--        <el-divider />-->
-<!--        <h4>部门意见</h4>-->
-<!--        <div>-->
-<!--          <el-row>-->
-<!--            <el-col :span="6">-->
-<!--              信息属实-->
-<!--            </el-col>-->
-<!--            <el-col :span="6">-->
-<!--              <span>审核时间：</span>-->
-<!--              <span>2019-12-04</span>-->
-<!--            </el-col>-->
-<!--            <el-col :span="6">-->
-<!--              <span>审核人：</span>-->
-<!--              <span>刘明至</span>-->
-<!--            </el-col>-->
-<!--            <el-col :span="5">-->
-<!--              <span>审核状态</span>-->
-<!--              <el-tag type="success" size="small">通过</el-tag>-->
-<!--            </el-col>-->
-<!--          </el-row>-->
-<!--        </div>-->
-<!--        <el-divider />-->
-<!--        <h4>系部意见</h4>-->
-<!--        <div>-->
-<!--          <el-row>-->
-<!--            <el-col :span="6">-->
-<!--              批准通过-->
-<!--            </el-col>-->
-<!--            <el-col :span="6">-->
-<!--              <span>审核时间：</span>-->
-<!--              <span>2019-12-04</span>-->
-<!--            </el-col>-->
-<!--            <el-col :span="6">-->
-<!--              <span>审核人：</span>-->
-<!--              <span>郭志</span>-->
-<!--            </el-col>-->
-<!--            <el-col :span="5">-->
-<!--              <span>审核状态</span>-->
-<!--              <el-tag type="success" size="small">通过</el-tag>-->
-<!--              <el-tag type="success" size="small">通过</el-tag>-->
-<!--            </el-col>-->
-<!--          </el-row>-->
-<!--        </div>-->
-<!--        <el-divider />-->
-<!--        <div>-->
-<!--          <el-row style="padding-top: 10px">-->
-<!--            <span style="font-weight: bolder">科研处意见</span>-->
-<!--          </el-row>-->
-<!--          <el-row style="padding-top: 10px">-->
-<!--            <el-input-->
-<!--              v-model="AuditingReason"-->
-<!--              :rows="4"-->
-<!--              type="textarea"-->
-<!--              placeholder="请输入内容"-->
-<!--            />-->
-<!--          </el-row>-->
-<!--        </div>-->
-<!--        <div class="foot">-->
-<!--        <span slot="footer" class="dialog-footer">-->
-<!--          <el-button type="success" size="small" plain @click="pass">审核通过</el-button>-->
-<!--          <el-button type="danger" size="small" plain @click="pass">审核未通过</el-button>-->
-<!--          <el-button type="primary" size="small" plain @click="zhuanyeVisible = false">关闭</el-button>-->
-<!--        </span>-->
-<!--        </div>-->
       </el-dialog>
     </div>
   </div>
@@ -564,7 +338,13 @@ import {
   getExportList,
   addProjectList,
   updateProjectList,
-  deleteProjectList
+  deleteProjectList,
+  addengineering,
+  deleteproposal,
+  submitreviewinfo,
+  submitproposalinfo,
+  submitengineeringinfo,
+  updateStatus
 } from '@/api/index'
 import pagination from "@/components/Pagination/index"
 
@@ -574,6 +354,7 @@ export default {
   components: {pagination},
   data() {
     return {
+      fileList: [],
       deptOptions: undefined,
       activeName: 'first',
       defaultProps: {
@@ -581,8 +362,12 @@ export default {
         value: "designUnitId",
         label: "designUnit",
       },
+      businessProject:{},
+      businessProposal:{},
+      meetingReview:{},
       downloadLoading: false,
       openinfo: false,
+      disabled:true,
       title: '',
       filterText: '',
       form: {},
@@ -614,13 +399,14 @@ export default {
         value: '3',
         label: '立项失败'
       }],
-      options1: [{
-        value: '1',
+      options11: [{
+        value: '是',
         label: '是'
       }, {
-        value: '2',
+        value: '否',
         label: '否'
       }],
+      options1: [],
       // value: '',
       data: [{
         id: 1,
@@ -673,6 +459,7 @@ export default {
   mounted() {
     this.getTree()
     this.getlist()
+    this.getUnit()
   },
   // watch: {
   //   filterText(val) {
@@ -681,18 +468,59 @@ export default {
   // },
 
   methods: {
+    handleRemove(file, fileList) {
+      console.log(file, fileList);
+    },
+    handlePreview(file) {
+      console.log(file);
+    },
+    handleExceed(files, fileList) {
+      this.$message.warning(`当前限制选择 3 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`);
+    },
+    beforeRemove(file, fileList) {
+      return this.$confirm(`确定移除 ${ file.name }？`);
+    },
     reset() {
-      this.form = {
-        id:undefined,
-        projectName: undefined,
-        projectOverview: undefined,
+      this.businessProject = {
+        budget: undefined,
+        createTime: undefined,
         designScheme: undefined,
         designUnit: undefined,
-        budget: undefined,
+        designUnitId: undefined,
+        id: undefined,
+        projectName: undefined,
+        projectOverview: undefined,
         status: undefined,
-        createTime: undefined,
         updateTime: undefined,
-      };
+      },
+        this.businessProposal = {
+          businessProjectId: undefined,
+          content: undefined,
+          createTime: undefined,
+          drawing: undefined,
+          id: undefined,
+          projectProposal: undefined,
+          projectUnit: undefined,
+          replyReport: undefined,
+          result: undefined,
+          updateTime: undefined,
+        },
+        this.meetingReview = {
+          businessProjectId: undefined,
+          createTime: undefined,
+          expertOpinion: undefined,
+          id: undefined,
+          modify: undefined,
+          organizationalUnitId: undefined,
+          participatingExperts: undefined,
+          updateTime: undefined,
+        }
+    },
+    getUnit(){
+      getDesignList().then( res => {
+        this.options1 = res.data.rows
+        console.log('unit',this.options1)
+      })
     },
     filterNode(value, data) {
       if (!value) return true;
@@ -716,8 +544,8 @@ export default {
 
     getTree() {
       getDesignList().then(res => {
-        this.deptOptions = res.rows;
-        console.log(this.deptOptions)
+        this.deptOptions = res.data.rows;
+        console.log('tree',this.deptOptions)
       })
     },
     handleQuery() {
@@ -795,8 +623,8 @@ export default {
     resetQuery() {
       // this.dateRange = [];
       // this.resetForm("queryForm");
-      this.queryParams.projectName = ''
-      this.queryParams.status = ''
+      this.queryParams.projectName = undefined
+      this.queryParams.designUnitId = undefined
 
       this.handleQuery();
     },
@@ -818,8 +646,12 @@ export default {
       })
     },
     handleUpdate(row) {
-      // this.reset()
-      this.form = row,
+      console.log('row',row)
+
+      this.reset()
+      this.businessProject =row.businessProject
+      this.businessProposal = row.businessProposal
+      this.meetingReview = row.meetingReview
       this.openinfo = true;
       this.title = "修改工程立项信息";
     },
@@ -842,7 +674,21 @@ export default {
           cancelButtonText: "取消",
           type: "success",
         }
-      )
+      ).then(function () {
+        console.log('id',row.id)
+        return updateStatus({
+          projectId: row.id,
+          status:row.status
+        });
+      })
+        .then(() => {
+          this.$message({
+            type: "success",
+            message: "立项成功"
+          })
+          this.getlist();
+        })
+        .catch(function () {});
     },
     handleDelete(row) {
       const name = row.projectName;
@@ -859,29 +705,46 @@ export default {
           return deleteProjectList(row.id);
         })
         .then(() => {
-
           this.$message({
             type: "success",
-            text: "删除成功"
+            message: "删除成功"
           })
           this.getlist();
         })
         .catch(function () {});
     },
     submitForm: function () {
+      this.form.businessProject = this.businessProject
+      this.form.meetingReview = this.meetingReview
+      this.form.businessProposal = this.businessProposal
+      // console.log('add',this.form)
       this.$refs["form"].validate((valid) => {
         if (valid) {
-          if (this.form.id != undefined) {
-            updateProjectList(this.form).then((response) => {
-              if (response.code === 200) {
+          if (this.businessProject.id != undefined) {
+            submitengineeringinfo(this.businessProject).then((response) => {
+              if (response.data.code === 200) {
+                this.openinfo = false;
+                this.getlist();
+              }
+            });
+            submitproposalinfo(this.businessProposal).then((response) => {
+              if (response.data.code === 200) {
+                this.openinfo = false;
+                this.getlist();
+              }
+            });
+            submitreviewinfo(this.meetingReview).then((response) => {
+              if (response.data.code === 200) {
                 this.msgSuccess("修改成功");
                 this.openinfo = false;
                 this.getlist();
               }
             });
+
           } else {
-            addProjectList(this.form).then((response) => {
-              if (response.code === 200) {
+            addengineering(this.form).then((response) => {
+              // console.log(response)
+              if (response.data.code === 200) {
                 this.msgSuccess("新增成功");
                 this.openinfo = false;
                 this.getlist();

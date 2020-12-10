@@ -27,11 +27,11 @@
     <!--      </el-col>-->
     <!--      <el-col :span="20" :xs="24">-->
     <div>
-      <span style="font-size: 14px;color: #606266;font-weight: 700;margin-right: 10px">招标内容</span>
-      <el-input v-model="queryParams.pumpNameCode" placeholder="请输入招标内容" clearable size="small"
+      <span style="font-size: 14px;color: #606266;font-weight: 700;margin-right: 10px">工程名称</span>
+      <el-input v-model="queryParams.businessProject" placeholder="请输入招标内容" clearable size="small"
                 style="width: 200px;margin-right: 30px"/>
-      <span style="font-size: 14px;color: #606266;font-weight: 700;margin-right: 10px">招标形式</span>
-      <el-input v-model="queryParams.waterPlantCodeName" placeholder="请输入招标形式" clearable size="small"
+      <span style="font-size: 14px;color: #606266;font-weight: 700;margin-right: 10px">招标内容</span>
+      <el-input v-model="queryParams.biddingName" placeholder="请输入招标形式" clearable size="small"
                 style="width: 200px;margin-right: 30px"/>
 <!--      <span style="font-size: 14px;color: #606266;font-weight: 700;margin-right: 10px">所属区域</span>-->
 <!--      <el-input v-model="queryParams.reservoirCodeName" placeholder="请输入所属区域" clearable size="small"-->
@@ -69,10 +69,10 @@
       </el-col>
     </el-row>
 
-    <el-table v-loading="loading" :data="comdata">
-      <el-table-column label="工程名称" align="center" prop="project"/>
-      <el-table-column label="招标内容" align="center" prop="name"/>
-      <el-table-column label="招标形式" align="center" prop="sub"/>
+    <el-table v-loading="loading" :data="projectList">
+      <el-table-column label="工程名称" align="center" prop="businessProject"/>
+      <el-table-column label="招标内容" align="center" prop="biddingName"/>
+      <el-table-column label="招标形式" align="center" prop="biddingForm"/>
       <el-table-column label="招标代理情况" align="center"  :show-overflow-tooltip="true">
         <template slot-scope="scope">
           <el-button type="text" @click="viewdaili(scope.row)">查看详情</el-button>
@@ -85,19 +85,19 @@
         <!--          <el-button type="text" @click="viewDetail(scope.row)">查看详细</el-button>-->
         <!--        </template>-->
 <!--      </el-table-column>-->
-      <el-table-column label="招标文件" align="center" prop="num" >
+      <el-table-column label="招标文件" align="center" >
       </el-table-column>
-      <el-table-column label="招标公告时间" align="center" prop="time"/>
-      <el-table-column label="招标控制价格" align="center" prop="usewater"/>
-      <el-table-column label="开标时间" align="center" prop="date"/>
-      <el-table-column label="开标地点" align="center" prop="address"/>
-      <el-table-column label="中标单位" align="center" prop="res">
+      <el-table-column label="招标公告时间" align="center" prop="bidTime"/>
+      <el-table-column label="招标控制价格" align="center" prop="price"/>
+      <el-table-column label="开标时间" align="center" prop="biddingNewTime"/>
+      <el-table-column label="开标地点" align="center" prop="biddingAddress"/>
+      <el-table-column label="中标单位" align="center" prop="biddingNewContent">
 <!--        <template slot-scope="scope">-->
 <!--          <el-tag v-if="scope.row.res =='成功'" type="success">成功</el-tag>-->
 <!--          <el-tag v-if="scope.row.res =='失败'" type="danger">失败</el-tag>-->
 <!--        </template>-->
       </el-table-column>
-      <el-table-column label="中标价格" align="center" prop="price"/>
+      <el-table-column label="中标价格" align="center" prop="biddingPrice"/>
       <el-table-column label="操作" align="center" width="150"  class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(scope.row)">修改</el-button>
@@ -111,7 +111,8 @@
       </el-table-column>
       <el-table-column label="点击完成招标" align="center"  class-name="small-padding fixed-width">
         <template slot-scope="scope">
-          <el-button size="mini" type="danger"  @click="zhaobiao(scope.row.project)">招标</el-button>
+          <el-button   size="mini" type="danger"  @click="zhaobiao(scope.row)" >招标</el-button>
+          <el-button  v-if="scope.row.businessProject.status =='招标阶段'" size="mini" type="success"  @click="zhaobiao(scope.row.project)" disabled>已立项</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -123,13 +124,13 @@
       <el-dialog :visible.sync="openinfo" :title="title">
         <el-form ref="form" :model="form" label-width="100px">
           <el-form-item label="招标内容">
-            <el-input v-model="form.projectName"/>
+            <el-input v-model="form.biddingName"/>
           </el-form-item>
           <el-form-item label="招标形式">
-            <el-input v-model="form.projectName"/>
+            <el-input v-model="form.biddingForm"/>
           </el-form-item>
           <el-form-item label="招标代理机构名称">
-            <el-input v-model="form.projectName"/>
+            <el-input v-model="form.contractor"/>
           </el-form-item>
           <!--          <el-form-item label="取样时间">-->
           <!--            <el-col :span="11">-->
@@ -138,22 +139,49 @@
           <!--            </el-col>-->
           <!--          </el-form-item>-->
           <el-form-item label="地址">
-            <el-input v-model="form.designScheme"/>
+            <el-input v-model="form.adress"/>
           </el-form-item>
           <el-form-item label="联系人">
-            <el-input v-model="form.designUnitId"/>
+            <el-input v-model="form.biddingPeople"/>
           </el-form-item>
           <el-form-item label="电话">
-            <el-input v-model="form.tel"/>
+            <el-input v-model="form.iphone"/>
           </el-form-item>
           <el-form-item label="招标文件">
-            <el-input v-model="form.num"/>
+<!--            <el-input v-model="form.file"/>-->
+            <el-upload
+              class="upload-demo"
+              action="http://47.104.100.75/smartwater/engineering/proposal/addFile"
+              :on-preview="handlePreview"
+              :on-remove="handleRemove"
+              :before-remove="beforeRemove"
+              multiple
+              :limit="3"
+              :on-exceed="handleExceed"
+              :file-list="fileList">
+              <el-button size="small" type="primary">点击上传</el-button>
+            </el-upload>
           </el-form-item>
           <el-form-item label="招标公告时间">
-            <el-input v-model="form.num"/>
+<!--            <el-input v-model="form.bidTime"/>-->
+            <el-date-picker type="date" placeholder="选择日期" v-model="form.bidTime" style="width: 100%;"></el-date-picker>
           </el-form-item>
           <el-form-item label="招标控制价格">
-            <el-input v-model="form.num"/>
+            <el-input v-model="form.price"/>
+          </el-form-item>
+          <el-form-item label="开标时间">
+<!--            <el-input v-model="form.biddingNewTime"/>-->
+            <el-date-picker type="date" placeholder="选择日期" v-model="form.biddingNewTime" style="width: 100%;"></el-date-picker>
+
+          </el-form-item>
+          <el-form-item label="开标地点">
+            <el-input v-model="form.biddingAddress"/>
+          </el-form-item>
+          <el-form-item label="中标单位">
+            <el-input v-model="form.biddingNewContent"/>
+          </el-form-item>
+          <el-form-item label="中标价格">
+            <el-input v-model="form.biddingPrice"/>
           </el-form-item>
         </el-form>
         <!--        <el-row><span style="font-size: 14px;color: #606266;font-weight: 700;margin-left: 10px">检测结果</span></el-row>-->
@@ -169,12 +197,12 @@
         <el-row :gutter="20" style="padding-top: 10px">
           <el-col :span="12">
             <span style="font-weight: bolder">招标代理机构名称：</span>
-            <span>青岛采购招标中心有限公司</span>
+            <span>{{agent.contractor}}</span>
           </el-col>
           <el-col :span="12">
             <div class="biaoqian">
               <span style="font-weight: bolder">地址：</span>
-              <span>即墨区45号</span>
+              <span>{{ agent.adress}}</span>
             </div>
           </el-col>
 <!--          <el-col :span="8">-->
@@ -188,13 +216,13 @@
           <el-col :span="12">
             <div class="biaoqian">
               <span style="font-weight: bolder">联系人：</span>
-              <span>王强</span>
+              <span>{{ agent.biddingPeople }}</span>
             </div>
           </el-col>
           <el-col :span="12">
             <div class="biaoqian">
               <span style="font-weight: bolder">联系方式：</span>
-              <span>13487654532</span>
+              <span>{{ agent.iphone }}</span>
             </div>
           </el-col>
         </el-row>
@@ -213,7 +241,11 @@ import {
   addProjectList,
   updateProjectList,
   deleteProjectList,
-  getWaterList
+  getWaterList,
+  getbidlist,
+  submitbid,
+  deletebidList,
+  updateStatus
 } from '@/api/index'
 import pagination from "@/components/Pagination/index"
 import {parseTime} from "@/utils";
@@ -222,77 +254,11 @@ export default {
   components: {pagination},
   data() {
     return {
+      fileList: [],
       deptOptions: undefined,
       detailFlag:false,
       dailiVisible:false,
-      comdata:[
-        {
-          project:'石化泉水利工程',
-          name:'施工',
-          sub:'公开招标',
-          teluser:'代理',
-          address:'青岛市市南区福州南路17号',
-          people:'王宁',
-          tel:'13455667843',
-          num:'未上传',
-          time:'6个月',
-          usewater:'100',
-          date:'2020-6-1',
-          res:'青岛城建',
-          price:'688943'
-
-        },
-        {
-          project:'石鹏水库设备改造工程',
-          name:'监理',
-          sub:'公开招标',
-          teluser:'代理',
-          address:'即墨区102号',
-          people:'李强',
-          tel:'13455667843',
-          num:'未上传',
-          time:'两个月',
-          usewater:'156',
-          date:'2020-6-1',
-          res:'中建二局',
-          price:'688943'
-        },
-        {
-          project:'青岛水利开发工程',
-          name:'设备采购',
-          sub:'公开招标',
-          teluser:'代理',
-          address:'即墨区55号',
-          people:'黎明',
-          tel:'13455667843',
-          num:'未上传',
-          time:'一年',
-          usewater:'34',
-          date:'2020-6-1',
-          res:'青岛建设',
-          price:'688943'
-        },
-        {
-          project:'安化水厂水利工程',
-          name:'施工',
-          sub:'公开招标',
-          teluser:'代理',
-          address:'即墨区2号',
-          people:'理宁',
-          tel:'13455667843',
-          num:'未上传',
-          time:'一年',
-          usewater:'66',
-          date:'2020-6-1',
-          res:'青岛建设',
-          price:'688943'
-        },
-      ],
-      defaultProps: {
-        children: " ",
-        value: "designUnitId",
-        label: "designUnit",
-      },
+      agent:{},
       downloadLoading: false,
       openinfo: false,
       title: '',
@@ -305,14 +271,8 @@ export default {
       pageSize: 10,
       pageNum: 1,
       queryParams: {
-        reservoirCodeName:undefined,
-        pumpNameCode:undefined,
-        waterPlantCodeName:undefined,
-        samplingLocation: undefined,
-        samplingTime: undefined,
-        monitoringUnit: undefined,
-        quality: undefined,
-        fileUrl: undefined
+        businessProject:undefined,
+        biddingName:undefined,
       },
       total: 0,
       gridData: [],
@@ -328,52 +288,6 @@ export default {
         label: '施工阶段'
       }],
       value: '',
-      data: [{
-        id: 1,
-        label: '水资源科',
-        children: [{
-          id: 4,
-          label: '办公厅',
-          children: [{
-            id: 9,
-            label: '1号'
-          }, {
-            id: 10,
-            label: '2号'
-          }]
-        }]
-      }, {
-        id: 2,
-        label: '水文水资源勘探局',
-        children: [{
-          id: 5,
-          label: '办公厅'
-        }, {
-          id: 6,
-          label: '人事司'
-        }]
-      }, {
-        id: 3,
-        label: '财务审计科',
-        children: [{
-          id: 7,
-          label: '财务司'
-        }, {
-          id: 8,
-          label: '人事司'
-        }]
-      },
-        {
-          id: 3,
-          label: '水政监察大队',
-          children: [{
-            id: 7,
-            label: '一队'
-          }, {
-            id: 8,
-            label: '二队'
-          }]
-        }],
     };
   },
   mounted() {
@@ -387,17 +301,36 @@ export default {
   // },
 
   methods: {
+    handleRemove(file, fileList) {
+      console.log(file, fileList);
+    },
+    handlePreview(file) {
+      console.log(file);
+    },
+    handleExceed(files, fileList) {
+      this.$message.warning(`当前限制选择 3 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`);
+    },
+    beforeRemove(file, fileList) {
+      return this.$confirm(`确定移除 ${ file.name }？`);
+    },
     reset() {
-      this.form = {
-        id:undefined,
-        projectName: undefined,
-        projectOverview: undefined,
-        designScheme: undefined,
-        designUnit: undefined,
-        budget: undefined,
-        status: undefined,
-        createTime: undefined,
-        updateTime: undefined,
+      this.form =  {
+        id: undefined,
+        biddingNewTime:  undefined,
+        biddingAddress: undefined,
+        biddingPrice:  undefined,
+        biddingNewContent: undefined,
+        iphone: undefined,
+        address: undefined,
+        biddingPeople: undefined,
+        biddingName: undefined,
+        biddingForm: undefined,
+        businessProjectId:  undefined,
+        businessProject: undefined,
+        bidTime:  undefined,
+        tender: undefined,
+        contractor: undefined,
+        price: undefined,
       };
     },
     viewDetail(row){
@@ -432,18 +365,19 @@ export default {
     },
     viewdaili(row){
       this.dailiVisible = true
+      this.agent = row
     },
     handleQuery() {
       // console.log('status', this.queryParams.status)
-      this.queryParams.page = 1;
+      // this.queryParams.page = 1;
       this.getlist();
     },
     getlist() {
       this.loading = true
-      getWaterList(this.queryParams).then(response => {
+      getbidlist(this.queryParams).then(response => {
         console.log('res',response)
-        this.projectList = response.rows
-        this.total = response.total
+        this.projectList = response.data.rows
+        this.total = response.data.total
         this.loading = false
         // console.log(this.resourceList)
       })
@@ -475,7 +409,7 @@ export default {
       this.handleQuery();
     },
     zhaobiao(row){
-      const name = row;
+      const name = row.businessProject;
       this.$confirm(
         '确认"' + name + '"工程招标完成并进入施工阶段?',
         "提示",
@@ -484,7 +418,21 @@ export default {
           cancelButtonText: "取消",
           type: "success",
         }
-      )
+      ).then(function () {
+        console.log('id',row.id)
+        return updateStatus({
+          projectId: row.id,
+          status:row.status
+        });
+      })
+        .then(() => {
+          this.$message({
+            type: "success",
+            message: "招标成功"
+          })
+          this.getlist();
+        })
+        .catch(function () {});
     },
     handleDownload() {
       this.downloadLoading = true
@@ -519,7 +467,7 @@ export default {
       }))
     },
     handleDelete(row) {
-      const name = row.projectName;
+      const name = row.businessProject;
       this.$confirm(
         '是否确认删除"' + name + '"的企业信息?',
         "警告",
@@ -530,13 +478,13 @@ export default {
         }
       ).then(function () {
         console.log('id',row.id)
-        return deleteProjectList(row.id);
+        return deletebidList(row.id);
       })
         .then(() => {
 
           this.$message({
             type: "success",
-            text: "删除成功"
+            message: "删除成功"
           })
           this.getlist();
         })
@@ -546,8 +494,8 @@ export default {
       this.$refs["form"].validate((valid) => {
         if (valid) {
           if (this.form.id != undefined) {
-            updateProjectList(this.form).then((response) => {
-              if (response.code === 200) {
+            submitbid(this.form).then((response) => {
+              if (response.data.code === 200) {
                 this.msgSuccess("修改成功");
                 this.openinfo = false;
                 this.getlist();

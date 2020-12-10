@@ -6,6 +6,12 @@ export function deleteProjectList(ids) {
     method: 'delete'
   })
 }
+export function deletebidList(ids) {
+  return request({
+    url: '/smartwater/engineering/bid/' +ids,
+    method: 'delete'
+  })
+}
 export function deleteEnterprise(ids) {
   return request({
     url: '/smartwater/rural_enterpriseInfo/deleteEnterpriseInfoByIds?ids=' +ids,
@@ -42,6 +48,34 @@ export function submitproject(data) {
 export function submitshuku(data) {
   return request({
     url: '/smartwater/mobile/inspection-log/update',
+    method: 'put',
+    data
+  })
+}
+export function submitengineeringinfo(data) {
+  return request({
+    url: '/smartwater/engineering/project',
+    method: 'put',
+    data
+  })
+}
+export function submitproposalinfo(data) {
+  return request({
+    url: '/smartwater/engineering/proposal',
+    method: 'put',
+    data
+  })
+}
+export function submitreviewinfo(data) {
+  return request({
+    url: '/smartwater/engineering/review',
+    method: 'put',
+    data
+  })
+}
+export function submitbid(data) {
+  return request({
+    url: '/smartwater/engineering/bid',
     method: 'put',
     data
   })
@@ -87,3 +121,9 @@ export let addEnterprise = (query)=> post('/smartwater/rural_enterpriseInfo/addE
 export let addquality = (query)=> post('/smartwater/display/quality',query)
 
 export let getqualitylist = (query)=> get('/smartwater/display/quality/getList',query)
+
+export let addengineering = (query)=> post('/smartwater/engineering/project',query)
+
+export let updateStatus = (query)=> get('/smartwater/engineering/project/updateStatus',query)
+
+export let getbidlist = (query)=> get('/smartwater/engineering/bid/list',query)
