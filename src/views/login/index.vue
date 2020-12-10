@@ -348,7 +348,7 @@
     },
     created() {
       // window.addEventListener('hashchange', this.afterQRScan)
-      this.getUrl()
+      // this.getUrl()
     },
     destroyed() {
       // window.removeEventListener('hashchange', this.afterQRScan)
